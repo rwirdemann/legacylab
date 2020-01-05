@@ -1,7 +1,9 @@
 package git
 
 import (
+	"bytes"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"os/exec"
@@ -12,8 +14,8 @@ import (
 func Checkout(url string) {
 	p := repositoryPath(url)
 	if exists(p) {
-		println("pulling")
 		os.Chdir(p)
+		fmt.Printf("pulling repository [dir=%s]\n", p)
 		run("git", "pull")
 	} else {
 		println("cloning")
@@ -21,12 +23,53 @@ func Checkout(url string) {
 	}
 }
 
-func run(name string, arg ...string) {
-	cmd := exec.Command("git", arg...)
-	err := cmd.Run()
+// ChangeFrequency calculates the number of changes applied to each file in the
+// given local repository. The resulting list is sorted by number of changes in
+// descending order. The result list is limited according to the given limit.
+func ChangeFrequency(repository string, limit int) {
+	os.Chdir(repository)
+	c1 := exec.Command("git", "log", "--format=format:", "--name-only")
+	c2 := exec.Command("egrep", "-v", "^[[:space:]]*$")
+	c3 := exec.Command("sort")
+	c4 := exec.Command("uniq", "-c")
+	c5 := exec.Command("sort", "-r")
+	c6 := exec.Command("head", fmt.Sprintf("-%d", limit))
+
+	var b bytes.Buffer
+	commands := []*exec.Cmd{c1, c2, c3, c4, c5, c6}
+	var pipes []*io.PipeWriter
+	for i, c := range commands {
+		if i == len(commands)-1 {
+			c.Stdout = &b
+		} else {
+			r, w := io.Pipe()
+			pipes = append(pipes, w)
+			c.Stdout = w
+			next := commands[i+1]
+			next.Stdin = r
+		}
+	}
+	for _, c := range commands {
+		c.Start()
+	}
+
+	for i, c := range commands {
+		c.Wait()
+		if i < len(commands)-1 {
+			pipes[i].Close()
+		}
+	}
+
+	s := b.String()
+	fmt.Printf(s)
+}
+
+func run(name string, arg ...string) []byte {
+	out, err := exec.Command("git", arg...).Output()
 	if err != nil {
 		log.Fatal(err)
 	}
+	return out
 }
 
 func repositoryPath(url string) string {
