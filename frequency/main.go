@@ -1,8 +1,14 @@
 package main
 
-import "github.com/rwirdemann/legacylab/git"
+import (
+	"flag"
+
+	"github.com/rwirdemann/legacylab/git"
+)
 
 func main() {
-	git.Checkout("https://devstack.vwgroup.com/bitbucket/scm/ngw/vwg.idhub.core-ds.git")
-	git.ChangeFrequency("/Users/ralf/tmp/vwg.idhub.core-ds", 30)
+	url := flag.String("url", "https://github.com/spring-projects/spring-data-jpa.git", "repository url")
+	flag.Parse()
+	path := git.Checkout(*url)
+	git.ChangeFrequency(path, 30)
 }

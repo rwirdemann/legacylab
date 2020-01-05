@@ -11,22 +11,26 @@ import (
 )
 
 // Checkout clones or pulls the given repository.
-func Checkout(url string) {
+func Checkout(url string) string {
 	p := repositoryPath(url)
 	if exists(p) {
 		os.Chdir(p)
-		fmt.Printf("pulling repository [dir=%s]\n", p)
+		fmt.Printf("pulling '%s']...", url)
+		fmt.Println("done")
 		run("git", "pull")
 	} else {
-		println("cloning")
+		fmt.Printf("cloning '%s']...", url)
+		fmt.Println("done")
 		run("git", "clone", url, p)
 	}
+	return p
 }
 
 // ChangeFrequency calculates the number of changes applied to each file in the
 // given local repository. The resulting list is sorted by number of changes in
 // descending order. The result list is limited according to the given limit.
 func ChangeFrequency(repository string, limit int) {
+	fmt.Printf("analyzing '%s']...", repository)
 	os.Chdir(repository)
 	c1 := exec.Command("git", "log", "--format=format:", "--name-only")
 	c2 := exec.Command("egrep", "-v", "^[[:space:]]*$")
@@ -49,16 +53,23 @@ func ChangeFrequency(repository string, limit int) {
 			next.Stdin = r
 		}
 	}
-	for _, c := range commands {
+	for i, c := range commands {
+		println("command", i, "started")
 		c.Start()
 	}
 
 	for i, c := range commands {
+		println("waiting for command", i)
 		c.Wait()
+		println("wait", i, "done")
+
 		if i < len(commands)-1 {
 			pipes[i].Close()
+			println("pipe", i, "closed")
+
 		}
 	}
+	fmt.Println("done")
 
 	s := b.String()
 	fmt.Printf(s)
