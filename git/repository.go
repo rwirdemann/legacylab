@@ -1,12 +1,11 @@
 package git
 
 import (
-	"bytes"
 	"fmt"
-	"io"
 	"log"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
 )
 
@@ -15,12 +14,8 @@ func Checkout(url string) string {
 	p := repositoryPath(url)
 	if exists(p) {
 		os.Chdir(p)
-		fmt.Printf("pulling '%s']...", url)
-		fmt.Println("done")
 		run("git", "pull")
 	} else {
-		fmt.Printf("cloning '%s']...", url)
-		fmt.Println("done")
 		run("git", "clone", url, p)
 	}
 	return p
@@ -29,50 +24,41 @@ func Checkout(url string) string {
 // ChangeFrequency calculates the number of changes applied to each file in the
 // given local repository. The resulting list is sorted by number of changes in
 // descending order. The result list is limited according to the given limit.
-func ChangeFrequency(repository string, limit int) {
-	fmt.Printf("analyzing '%s']...", repository)
-	os.Chdir(repository)
-	c1 := exec.Command("git", "log", "--format=format:", "--name-only")
-	c2 := exec.Command("egrep", "-v", "^[[:space:]]*$")
-	c3 := exec.Command("sort")
-	c4 := exec.Command("uniq", "-c")
-	c5 := exec.Command("sort", "-r")
-	c6 := exec.Command("head", fmt.Sprintf("-%d", limit))
+func ChangeFrequency(repository string, limit int) []File {
+	cmd := fmt.Sprintf("git log --format=format: --name-only | egrep -v '^$' | sort | uniq -c | sort -r | head -%d", limit)
+	out, err := exec.Command("bash", "-c", cmd).Output()
+	check(err)
+	return toArray(string(out))
+}
 
-	var b bytes.Buffer
-	commands := []*exec.Cmd{c1, c2, c3, c4, c5, c6}
-	var pipes []*io.PipeWriter
-	for i, c := range commands {
-		if i == len(commands)-1 {
-			c.Stdout = &b
-		} else {
-			r, w := io.Pipe()
-			pipes = append(pipes, w)
-			c.Stdout = w
-			next := commands[i+1]
-			next.Stdin = r
+func toArray(s string) []File {
+	a := strings.Split(s, "\n")
+	var result []File
+	for _, v := range a {
+		if isLanguageFile(v) {
+			result = append(result, NewFile(v))
 		}
 	}
-	for i, c := range commands {
-		println("command", i, "started")
-		c.Start()
+	return result
+}
+
+func Lines(respository, file string) int {
+	f := fmt.Sprintf("%s/%s", respository, file)
+	out, err := exec.Command("wc", "-l", f).Output()
+	if err != nil {
+		log.Fatal(err)
 	}
-
-	for i, c := range commands {
-		println("waiting for command", i)
-		c.Wait()
-		println("wait", i, "done")
-
-		if i < len(commands)-1 {
-			pipes[i].Close()
-			println("pipe", i, "closed")
-
-		}
+	s := strings.Trim(string(out), " ")
+	a := strings.Split(s, " ")
+	i, err := strconv.Atoi(a[0])
+	if err != nil {
+		panic(err)
 	}
-	fmt.Println("done")
+	return i
+}
 
-	s := b.String()
-	fmt.Printf(s)
+func isLanguageFile(s string) bool {
+	return strings.HasSuffix(s, ".go") || strings.HasSuffix(s, ".java")
 }
 
 func run(name string, arg ...string) []byte {
@@ -94,4 +80,10 @@ func exists(name string) bool {
 		return !os.IsNotExist(err)
 	}
 	return true
+}
+
+func check(err error) {
+	if err != nil {
+		log.Fatal(err)
+	}
 }
