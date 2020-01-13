@@ -1,4 +1,7 @@
 build:
-	go build -o ${GOPATH}/bin/lb frequency/main.go
+	go build -o ${GOPATH}/bin/lb main.go
 
-.PHONY: build deploy-dev clean
+test:
+	go test ./... 
+
+.PHONY: build test
