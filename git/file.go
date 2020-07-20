@@ -6,10 +6,10 @@ import (
 )
 
 type File struct {
-	Name       string
-	Commits    int
-	Lines      int
-	Complextiy float32
+	Name       string  `json:"name"`
+	Commits    int     `json:"commits"`
+	Lines      int     `json:"lines"`
+	Complextiy float32 `json:"complextiy"`
 }
 
 func NewFile(s string) File {
