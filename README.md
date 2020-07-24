@@ -3,10 +3,13 @@
 LegacyLab provides a set of tools for advanced technical debt analysis and
 management.
 
+## Tools
+
+* hs - hotspot analysis tool
+
 ## Build
 
-Builds and installs the LegacyLab binary _lb_ to the _bin_ directory of your
-GOPATH.
+Builds and installs the LegacyLab binaries _bin_ directory of your GOPATH.
 
 ```
 make
@@ -15,5 +18,5 @@ make
 ## Usage
 
 ```
-lb --help
+hs --help
 ```

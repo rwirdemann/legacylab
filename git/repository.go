@@ -5,7 +5,6 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"strconv"
 	"strings"
 )
 
@@ -35,30 +34,19 @@ func toArray(s string) []File {
 	a := strings.Split(s, "\n")
 	var result []File
 	for _, v := range a {
-		if isLanguageFile(v) {
+		if isLanguageFile(v) && !isTest(v) {
 			result = append(result, NewFile(v))
 		}
 	}
 	return result
 }
 
-func Lines(respository, file string) int {
-	f := fmt.Sprintf("%s/%s", respository, file)
-	out, err := exec.Command("wc", "-l", f).Output()
-	if err != nil {
-		log.Fatal(err)
-	}
-	s := strings.Trim(string(out), " ")
-	a := strings.Split(s, " ")
-	i, err := strconv.Atoi(a[0])
-	if err != nil {
-		panic(err)
-	}
-	return i
-}
-
 func isLanguageFile(s string) bool {
 	return strings.HasSuffix(s, ".go") || strings.HasSuffix(s, ".java")
+}
+
+func isTest(s string) bool {
+	return strings.HasSuffix(s, "Tests.java")
 }
 
 func run(name string, arg ...string) []byte {

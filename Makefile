@@ -1,5 +1,5 @@
 build:
-	go build -o ${GOPATH}/bin/lb main.go
+	go build -o ${GOPATH}/bin/hs cli/hotspot/main.go
 	env GOOS=linux CGO_ENABLED=0 go build ${LDFLAGS} -a -installsuffix cgo -o bin/legacylab http/main.go
 
 deploy: build
