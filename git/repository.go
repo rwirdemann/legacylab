@@ -13,11 +13,18 @@ func Checkout(url string) string {
 	p := repositoryPath(url)
 	if exists(p) {
 		os.Chdir(p)
-		run("git", "pull")
-	} else {
-		run("git", "clone", url, p)
+		if isRemote(url) {
+			run("git", "pull")
+		}
+		return p
 	}
+	run("git", "clone", url, p)
+	os.Chdir(p)
 	return p
+}
+
+func isRemote(url string) bool {
+	return strings.HasPrefix(url, "http")
 }
 
 // ChangeFrequency calculates the number of changes applied to each file in the
