@@ -3,9 +3,11 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/rwirdemann/legacylab/complexity"
 	"os"
+	"path/filepath"
 	"text/tabwriter"
+
+	"github.com/rwirdemann/legacylab/complexity"
 
 	"github.com/rwirdemann/legacylab/git"
 )
@@ -13,6 +15,7 @@ import (
 func main() {
 	url := flag.String("url", "https://github.com/spring-projects/spring-data-jpa.git", "repository url")
 	limit := flag.Int("limit", 30, "file limit")
+	base := flag.Bool("base", false, "shorten filenames to base")
 	flag.Parse()
 	path := git.Checkout(*url)
 	files := git.ChangeFrequency(path, *limit)
@@ -23,7 +26,11 @@ func main() {
 		var found bool
 		f.Lines, f.Complextiy, found = complexity.Calc(fmt.Sprintf("%s/%s", path, f.Name))
 		if found {
-			fmt.Fprintf(w, "%d\t%s\t%d\t%.2f\n", f.Commits, f.Name, f.Lines, f.Complextiy)
+			filename := f.Name
+			if *base {
+				filename = filepath.Base(f.Name)
+			}
+			fmt.Fprintf(w, "%d\t%s\t%d\t%.2f\n", f.Commits, filename, f.Lines, f.Complextiy)
 		}
 	}
 	w.Flush()
