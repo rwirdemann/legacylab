@@ -20,10 +20,9 @@ make
 
 ### Hotspot Analysis: hs
 
-The hotspot analysis tool _hs_ analyses a git repository and reports a list of
-files ordered by their commit frequency and complexity. The tool could be run
-either on a local or remote git repository depending on the URL given as
-command-line parameter:
+The hotspot analysis tool _hs_ analyses a git repository and reports a list of files ordered by
+their commit frequency and complexity. The tool could be run either on a local or remote git
+repository depending on the URL given as command-line parameter:
 
 ```
 # run hs on local repository
